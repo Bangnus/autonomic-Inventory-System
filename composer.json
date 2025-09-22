@@ -1,0 +1,7 @@
+{
+    "name": "autonomic/pdf-system",
+    "description": "PDF Generation System",
+    "require": {
+        "spipu/html2pdf": "^5.2"
+    }
+}

@@ -43,6 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$user['id'], $product_id, 'request', $quantity, $signature_data]);
                     $transaction_id = $pdo->lastInsertId();
 
+                    // Insert into requests table
+                    $stmt = $pdo->prepare('INSERT INTO requests (user_id, product_id, quantity) VALUES (?, ?, ?)');
+                    $stmt->execute([$user['id'], $product_id, $quantity]);
+
                     // Update stock quantity
                     $stmt = $pdo->prepare('UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?');
                     $stmt->execute([$quantity, $product_id]);
@@ -58,10 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->execute([$pdf_filename, $transaction_id]);
 
                     $success = 'Request submitted successfully! Stock has been updated.';
-
-                    // Redirect to PDF download
-                    header('Location: /autonomic/export_pdf.php?type=request&id=' . $transaction_id);
-                    exit;
+                    // ไม่ต้อง redirect หรือแสดงหน้าโหลด PDF อัตโนมัติ
                 } catch (Exception $e) {
                     $pdo->rollBack();
                     throw $e;
@@ -114,6 +115,10 @@ render_with_sidebar($pageTitle, 'request', function () use ($error, $success, $p
                     <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>" />
                     <input type="hidden" name="signature_data" id="signature_data" />
 
+                    <div class="mb-4">
+                        <label for="searchProduct" class="block text-sm font-medium text-gray-700 mb-2">Search Product</label>
+                        <input type="text" id="searchProduct" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Type to search..." onkeyup="filterProducts()">
+                    </div>
                     <div>
                         <label for="product_id" class="block text-sm font-medium text-gray-700 mb-2">Select Product *</label>
                         <select id="product_id" name="product_id" required
@@ -244,6 +249,15 @@ render_with_sidebar($pageTitle, 'request', function () use ($error, $success, $p
     </div>
 
     <script>
+        // Search/filter for product dropdown
+        function filterProducts() {
+            var input = document.getElementById('searchProduct').value.toLowerCase();
+            var select = document.getElementById('product_id');
+            for (var i = 0; i < select.options.length; i++) {
+                var txt = select.options[i].text.toLowerCase();
+                select.options[i].style.display = txt.includes(input) ? '' : 'none';
+            }
+        }
         // Signature pad functionality
         const canvas = document.getElementById('signatureCanvas');
         const ctx = canvas.getContext('2d');

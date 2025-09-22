@@ -10,8 +10,19 @@ $pdo = get_pdo();
 $error = '';
 $success = '';
 
-// Get all products for dropdown
-$stmt = $pdo->query('SELECT * FROM products ORDER BY name');
+
+// Get products from transactions table for dropdown (only products user has requested and not fully returned)
+$stmt = $pdo->prepare('
+    SELECT t.product_id, p.name, p.code, p.serial, p.model, p.stock_quantity,
+        SUM(CASE WHEN t.type = "request" THEN t.quantity ELSE 0 END) - SUM(CASE WHEN t.type = "return" THEN t.quantity ELSE 0 END) AS remaining
+    FROM transactions t
+    JOIN products p ON t.product_id = p.id
+    WHERE t.user_id = ?
+    GROUP BY t.product_id, p.name, p.code, p.serial, p.model, p.stock_quantity
+    HAVING remaining > 0
+    ORDER BY p.name
+');
+$stmt->execute([$user['id']]);
 $products = $stmt->fetchAll();
 
 // Handle form submission
@@ -29,8 +40,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$product_id]);
             $product = $stmt->fetch();
 
+            // ตรวจสอบจำนวนที่ยังไม่ได้คืน (request - return)
+            $stmt = $pdo->prepare('SELECT 
+                SUM(CASE WHEN type = "request" THEN quantity ELSE 0 END) AS total_requested,
+                SUM(CASE WHEN type = "return" THEN quantity ELSE 0 END) AS total_returned
+                FROM transactions
+                WHERE user_id = ? AND product_id = ?');
+            $stmt->execute([$user['id'], $product_id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $total_requested = (int)($row['total_requested'] ?? 0);
+            $total_returned = (int)($row['total_returned'] ?? 0);
+            $remaining = $total_requested - $total_returned;
+
             if (!$product) {
                 $error = 'Product not found.';
+            } elseif ($quantity > $remaining) {
+                $error = 'Cannot return more than requested. You have ' . $remaining . ' left to return.';
             } else {
                 // Start transaction
                 $pdo->beginTransaction();
@@ -112,18 +137,23 @@ render_with_sidebar($pageTitle, 'return', function () use ($error, $success, $pr
                     <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>" />
                     <input type="hidden" name="signature_data" id="signature_data" />
 
+                    <div class="mb-4">
+                        <label for="searchProduct" class="block text-sm font-medium text-gray-700 mb-2">Search Product</label>
+                        <input type="text" id="searchProduct" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Type to search..." onkeyup="filterProducts()">
+                    </div>
                     <div>
                         <label for="product_id" class="block text-sm font-medium text-gray-700 mb-2">Select Product *</label>
                         <select id="product_id" name="product_id" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">Choose a product...</option>
                             <?php foreach ($products as $product): ?>
-                                <option value="<?php echo $product['id']; ?>"
-                                    data-code="<?php echo e($product['code']); ?>"
-                                    data-serial="<?php echo e($product['serial']); ?>"
-                                    data-model="<?php echo e($product['model']); ?>"
-                                    data-stock="<?php echo $product['stock_quantity']; ?>">
-                                    <?php echo e($product['name'] . ' (' . $product['code'] . ')'); ?>
+                                <option value="<?php echo $product['product_id']; ?>"
+                                    data-code="<?php echo htmlspecialchars($product['code']); ?>"
+                                    data-serial="<?php echo htmlspecialchars($product['serial']); ?>"
+                                    data-model="<?php echo htmlspecialchars($product['model']); ?>"
+                                    data-stock="<?php echo $product['stock_quantity']; ?>"
+                                    data-remaining="<?php echo $product['remaining']; ?>">
+                                    <?php echo htmlspecialchars($product['name'] . ' (' . $product['code'] . ') - requested: ' . $product['remaining']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -162,7 +192,7 @@ render_with_sidebar($pageTitle, 'return', function () use ($error, $success, $pr
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Digital Signature *</label>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                            <canvas id="signatureCanvas" 
+                            <canvas id="signatureCanvas"
                                 class="w-full h-40 border border-gray-300 rounded cursor-crosshair bg-white"></canvas>
                             <div class="mt-2 flex gap-2">
                                 <button type="button" onclick="clearSignature()"
@@ -254,6 +284,15 @@ render_with_sidebar($pageTitle, 'return', function () use ($error, $success, $pr
     </div>
 
     <script>
+        // Search/filter for product dropdown
+        function filterProducts() {
+            var input = document.getElementById('searchProduct').value.toLowerCase();
+            var select = document.getElementById('product_id');
+            for (var i = 0; i < select.options.length; i++) {
+                var txt = select.options[i].text.toLowerCase();
+                select.options[i].style.display = txt.includes(input) ? '' : 'none';
+            }
+        }
         // Signature pad functionality
         const canvas = document.getElementById('signatureCanvas');
         const ctx = canvas.getContext('2d');

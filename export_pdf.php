@@ -1,192 +1,183 @@
 <?php
-declare(strict_types=1);
-require_once __DIR__ . '/db.php';
-require_once __DIR__ . '/vendor/fpdf/fpdf.php';
+// เปิด error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
+// ล้าง buffer และเริ่ม session
+if (ob_get_level()) ob_end_clean();
+ob_start();
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (!isset($_SESSION['user'])) die("กรุณาเข้าสู่ระบบก่อน");
+
+// include HTML2PDF
+require_once __DIR__ . '/vendor/autoload.php';
+
+// include db & auth
+require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/db.php';
+
+$debug = isset($_GET['debug']) && $_GET['debug'] === 'true';
 require_login();
 
 $user = $_SESSION['user'];
 $pdo = get_pdo();
 
-// Get transaction details
+// ดึงค่า transaction
 $type = $_GET['type'] ?? '';
 $transaction_id = (int)($_GET['id'] ?? 0);
 
-if (!in_array($type, ['request', 'return']) || !$transaction_id) {
-    http_response_code(400);
-    echo 'Invalid parameters.';
-    exit;
+if ($debug) {
+    echo "transaction_id = $transaction_id<br>";
+    echo "type = '$type'<br>";
 }
 
-// Get transaction details
+// Query transaction
 $sql = "
-    SELECT t.*, u.name as user_name, u.email as user_email,
-           p.name as product_name, p.code as product_code, p.serial, p.model
-    FROM transactions t
-    JOIN users u ON t.user_id = u.id
-    JOIN products p ON t.product_id = p.id
-    WHERE t.id = ? AND t.type = ?
+SELECT t.*, u.name AS user_name, u.email AS user_email,
+       p.name AS product_name, p.code AS product_code, p.serial, p.model
+FROM transactions t
+LEFT JOIN users u ON t.user_id = u.id
+LEFT JOIN products p ON t.product_id = p.id
+WHERE t.id = ? AND t.type = ?
 ";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$transaction_id, $type]);
-$transaction = $stmt->fetch();
+$transaction = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($debug) {
+    echo "<pre>" . print_r($transaction, true) . "</pre>";
+    exit;
+}
 
 if (!$transaction) {
     http_response_code(404);
-    echo 'Transaction not found.';
-    exit;
+    die('Transaction not found');
 }
 
-// Check if user can access this transaction (admin or own transaction)
-if ($user['role'] !== 'admin' && $transaction['user_id'] !== $user['id']) {
-    http_response_code(403);
-    echo 'Access denied.';
-    exit;
+// สร้าง HTML content แบบง่าย ๆ ก่อน
+$html = '<page>
+<div style="text-align: center; margin-bottom: 20px;">
+    <h1>INVENTORY MANAGEMENT SYSTEM</h1>
+</div>
+<div style="margin-bottom: 10px;">
+    <b>Transaction ID:</b> ' . $transaction['id'] . '
+</div>
+<div style="margin-bottom: 10px;">
+    <b>Type:</b> ' . ucfirst($transaction['type']) . '
+</div>
+<div style="margin-bottom: 10px;">
+    <b>User:</b> ' . htmlspecialchars($transaction['user_name']) . '
+</div>
+<div style="margin-bottom: 10px;">
+    <b>Product:</b> ' . htmlspecialchars($transaction['product_name']) . '
+</div>
+<div style="margin-bottom: 10px;">
+    <b>Quantity:</b> ' . $transaction['quantity'] . '
+</div>
+</page>';
+
+// Add debug logging
+if ($debug) {
+    echo "HTML Content:<br><pre>" . htmlspecialchars($html) . "</pre>";
 }
 
-// Create PDF
-class PDF extends FPDF {
-    function Header() {
-        $this->SetFont('Arial', 'B', 16);
-        $this->Cell(0, 10, 'Inventory Management System', 0, 1, 'C');
-        $this->SetFont('Arial', 'B', 14);
-        $this->Cell(0, 10, strtoupper($this->transactionType) . ' DOCUMENT', 0, 1, 'C');
-        $this->Ln(5);
+// Check system requirements
+if ($debug) {
+    echo "Checking system requirements...<br>";
+    echo "PHP Version: " . phpversion() . "<br>";
+    if (extension_loaded('gd')) {
+        echo "GD extension: Installed (Version: " . gd_info()['GD Version'] . ")<br>";
+    } else {
+        die("Error: GD extension is required but not installed");
     }
-    
-    function Footer() {
-        $this->SetY(-15);
-        $this->SetFont('Arial', 'I', 8);
-        $this->Cell(0, 10, 'Generated on ' . date('Y-m-d H:i:s'), 0, 0, 'C');
+    echo "Memory limit: " . ini_get('memory_limit') . "<br>";
+}
+
+try {
+    if ($debug) {
+        echo "Creating HTML2PDF instance...<br>";
     }
-    
-    function SetTransactionType($type) {
-        $this->transactionType = $type;
+
+    // สร้าง PDF ใช้ภาษา en แทน th
+    $pdf = new Spipu\Html2Pdf\Html2Pdf('P', 'A4', 'en', true, 'UTF-8');
+    $pdf->pdf->AddFont('thsarabunnew', '', 'thsarabunnew.php');
+    $pdf->setDefaultFont('thsarabunnew');
+
+    if ($debug) {
+        echo "Setting default font...<br>";
+        echo "Current working directory: " . getcwd() . "<br>";
+    }
+
+    // ตรวจสอบและโหลด font
+    $fontPath = __DIR__ . '/vendor/tecnickcom/tcpdf/fonts/THSarabun.ttf';
+    if (!file_exists($fontPath)) {
+        if ($debug) {
+            echo "Warning: THSarabun font not found at: $fontPath<br>";
+            echo "Falling back to default font<br>";
+        }
+    } else {
+        if ($debug) {
+            echo "Font file found: $fontPath<br>";
+        }
+    }
+
+    // Set some options - using default font if THSarabun not available
+    if (file_exists($fontPath)) {
+        $pdf->setDefaultFont('THSarabun');
+    }
+
+    if ($debug) {
+        echo "Writing HTML content...<br>";
+        echo "Content length: " . strlen($html) . " bytes<br>";
+    }
+
+    // Write content
+    $pdf->writeHTML($html);
+
+    if ($debug) {
+        echo "Clearing output buffer...<br>";
+    }
+
+    if ($debug) {
+        // Save to file for debugging
+        $debugFile = __DIR__ . '/debug.pdf';
+        echo "Saving PDF to: " . $debugFile . "<br>";
+        $pdf->Output($debugFile, 'F');
+        echo "PDF saved successfully. File size: " . filesize($debugFile) . " bytes<br>";
+        exit;
+    }
+
+    // สร้างชื่อไฟล์
+    $filename = sprintf(
+        '%s_%d_%s.pdf',
+        $transaction['type'],
+        $transaction['id'],
+        date('Y-m-d_H-i-s')
+    );
+
+    // Update filename in database
+    $stmt = $pdo->prepare("UPDATE transactions SET pdf_filename = ? WHERE id = ?");
+    $stmt->execute([$filename, $transaction_id]);
+
+    // ล้าง buffer และตั้งค่า headers
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/pdf');
+    header('Content-Disposition: inline; filename="' . $filename . '"');
+    header('Cache-Control: private, max-age=0, must-revalidate');
+    header('Pragma: public');
+
+    // ส่ง PDF
+    $pdf->Output($filename, 'I');
+} catch (Exception $e) {
+    if ($debug) {
+        echo "Error generating PDF:<br>";
+        echo "<pre>" . $e->getMessage() . "\n" . $e->getTraceAsString() . "</pre>";
+        echo "\nPHP Version: " . phpversion();
+        echo "\nMemory Usage: " . memory_get_usage(true) / 1024 / 1024 . " MB";
+        echo "\nPeak Memory Usage: " . memory_get_peak_usage(true) / 1024 / 1024 . " MB";
+    } else {
+        http_response_code(500);
+        die("Error generating PDF");
     }
 }
-
-$pdf = new PDF();
-$pdf->SetTransactionType($type);
-$pdf->AddPage();
-
-// Transaction details
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, 'Transaction Details', 0, 1);
-$pdf->SetFont('Arial', '', 10);
-
-$pdf->Cell(40, 8, 'Transaction ID:', 0, 0);
-$pdf->Cell(0, 8, '#' . $transaction['id'], 0, 1);
-
-$pdf->Cell(40, 8, 'Date:', 0, 0);
-$pdf->Cell(0, 8, date('F j, Y g:i A', strtotime($transaction['created_at'])), 0, 1);
-
-$pdf->Cell(40, 8, 'Type:', 0, 0);
-$pdf->Cell(0, 8, ucfirst($transaction['type']), 0, 1);
-
-$pdf->Cell(40, 8, 'User:', 0, 0);
-$pdf->Cell(0, 8, $transaction['user_name'] . ' (' . $transaction['user_email'] . ')', 0, 1);
-
-$pdf->Ln(5);
-
-// Product details
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, 'Product Information', 0, 1);
-$pdf->SetFont('Arial', '', 10);
-
-$pdf->Cell(40, 8, 'Product Name:', 0, 0);
-$pdf->Cell(0, 8, $transaction['product_name'], 0, 1);
-
-$pdf->Cell(40, 8, 'Product Code:', 0, 0);
-$pdf->Cell(0, 8, $transaction['product_code'], 0, 1);
-
-if ($transaction['serial']) {
-    $pdf->Cell(40, 8, 'Serial Number:', 0, 0);
-    $pdf->Cell(0, 8, $transaction['serial'], 0, 1);
-}
-
-if ($transaction['model']) {
-    $pdf->Cell(40, 8, 'Model:', 0, 0);
-    $pdf->Cell(0, 8, $transaction['model'], 0, 1);
-}
-
-$pdf->Cell(40, 8, 'Quantity:', 0, 0);
-$pdf->Cell(0, 8, number_format($transaction['quantity']), 0, 1);
-
-$pdf->Ln(10);
-
-// Signature section
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, 'Digital Signature', 0, 1);
-
-if ($transaction['signature_base64']) {
-    // Decode base64 signature
-    $signatureData = $transaction['signature_base64'];
-    
-    // Create a temporary file for the signature image
-    $tempFile = tempnam(sys_get_temp_dir(), 'signature_');
-    $imageData = base64_decode(preg_replace('/^data:image\/png;base64,/', '', $signatureData));
-    file_put_contents($tempFile, $imageData);
-    
-    // Get image dimensions
-    $imageInfo = getimagesize($tempFile);
-    if ($imageInfo) {
-        $imageWidth = $imageInfo[0];
-        $imageHeight = $imageInfo[1];
-        
-        // Calculate size to fit in PDF (max width 120mm)
-        $maxWidth = 120;
-        $maxHeight = 40;
-        
-        $scaleX = $maxWidth / $imageWidth;
-        $scaleY = $maxHeight / $imageHeight;
-        $scale = min($scaleX, $scaleY);
-        
-        $displayWidth = $imageWidth * $scale;
-        $displayHeight = $imageHeight * $scale;
-        
-        // Add image to PDF
-        $pdf->Image($tempFile, null, null, $displayWidth, $displayHeight);
-    }
-    
-    // Clean up temporary file
-    unlink($tempFile);
-} else {
-    $pdf->SetFont('Arial', 'I', 10);
-    $pdf->Cell(0, 8, 'No signature available', 0, 1);
-}
-
-$pdf->Ln(10);
-
-// Terms and conditions
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(0, 8, 'Terms and Conditions:', 0, 1);
-$pdf->SetFont('Arial', '', 9);
-
-if ($type === 'request') {
-    $terms = [
-        '1. The requester is responsible for the proper use and care of the requested items.',
-        '2. Items must be returned in the same condition as received.',
-        '3. Any damage or loss must be reported immediately.',
-        '4. This document serves as proof of request and must be kept for records.',
-        '5. Stock has been automatically deducted from inventory.'
-    ];
-} else {
-    $terms = [
-        '1. The returned items have been received and added back to inventory.',
-        '2. Items should be in good working condition.',
-        '3. Any discrepancies should be reported immediately.',
-        '4. This document serves as proof of return and must be kept for records.',
-        '5. Stock has been automatically added back to inventory.'
-    ];
-}
-
-foreach ($terms as $term) {
-    $pdf->Cell(0, 6, $term, 0, 1);
-}
-
-// Generate filename
-$filename = $type . '_' . $transaction_id . '_' . date('Y-m-d_H-i-s') . '.pdf';
-
-// Output PDF
-$pdf->Output('D', $filename); // 'D' for download
-?>

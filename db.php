@@ -4,7 +4,9 @@
 
 declare(strict_types=1);
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 const DB_HOST = 'localhost';
 const DB_NAME = 'inventory_request';
@@ -70,7 +72,4 @@ function require_admin(): void {
         exit;
     }
 }
-
 ?>
-
-

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../db.php';
 require_login();
@@ -72,7 +73,7 @@ $summary = $summary_stmt->fetch();
 require_once __DIR__ . '/../layouts/sidebar.php';
 $pageTitle = 'Transaction History';
 render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from, $date_to, $product_filter, $type_filter, $products, $transactions) {
-    ?>
+?>
     <div class="max-w-7xl mx-auto">
         <div class="mb-8">
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Transaction History</h2>
@@ -81,7 +82,7 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
 
         <!-- Summary Statistics -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg py-6 px-4">
                 <div class="flex items-center">
                     <div class="p-3 bg-blue-100 rounded-lg">
                         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +96,7 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg py-6 px-4">
                 <div class="flex items-center">
                     <div class="p-3 bg-orange-100 rounded-lg">
                         <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,7 +110,7 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg py-6 px-4">
                 <div class="flex items-center">
                     <div class="p-3 bg-green-100 rounded-lg">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +124,7 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg py-6 px-4">
                 <div class="flex items-center">
                     <div class="p-3 bg-purple-100 rounded-lg">
                         <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +138,7 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="bg-white rounded-xl shadow-lg py-6 px-4">
                 <div class="flex items-center">
                     <div class="p-3 bg-red-100 rounded-lg">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,50 +159,50 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
             <form method="get" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label for="date_from" class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
-                    <input type="date" id="date_from" name="date_from" value="<?php echo e($date_from); ?>" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <input type="date" id="date_from" name="date_from" value="<?php echo e($date_from); ?>"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
-                
+
                 <div>
                     <label for="date_to" class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
-                    <input type="date" id="date_to" name="date_to" value="<?php echo e($date_to); ?>" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <input type="date" id="date_to" name="date_to" value="<?php echo e($date_to); ?>"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
-                
+
                 <div>
                     <label for="product_id" class="block text-sm font-medium text-gray-700 mb-2">Product</label>
-                    <select id="product_id" name="product_id" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select id="product_id" name="product_id"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">All Products</option>
                         <?php foreach ($products as $product): ?>
                             <option value="<?php echo $product['id']; ?>" <?php echo $product_filter == $product['id'] ? 'selected' : ''; ?>>
                                 <?php echo e($product['name'] . ' (' . $product['code'] . ')'); ?>
                             </option>
-            <?php endforeach; ?>
-        </select>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                
+
                 <div>
                     <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                    <select id="type" name="type" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">All Types</option>
+                    <select id="type" name="type"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Types</option>
                         <option value="request" <?php echo $type_filter === 'request' ? 'selected' : ''; ?>>Request</option>
                         <option value="return" <?php echo $type_filter === 'return' ? 'selected' : ''; ?>>Return</option>
-        </select>
+                    </select>
                 </div>
-                
+
                 <div class="md:col-span-2 lg:col-span-4 flex gap-3">
-                    <button type="submit" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-200">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-200">
                         Apply Filters
                     </button>
-                    <a href="/autonomic/user/history.php" 
-                       class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition duration-200">
+                    <a href="/autonomic/user/history.php"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition duration-200">
                         Clear Filters
                     </a>
                 </div>
-    </form>
+            </form>
         </div>
 
         <!-- Transactions Table -->
@@ -209,7 +210,7 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900">Your Transactions (<?php echo count($transactions); ?>)</h3>
             </div>
-            
+
             <?php if (empty($transactions)): ?>
                 <div class="text-center py-12">
                     <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,15 +219,15 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                     <h3 class="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
                     <p class="text-gray-600 mb-4">You haven't made any requests or returns yet.</p>
                     <div class="space-x-3">
-                        <a href="/autonomic/user/request.php" 
-                           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                        <a href="/autonomic/user/request.php"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                             Make Request
                         </a>
-                        <a href="/autonomic/user/return.php" 
-                           class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                        <a href="/autonomic/user/return.php"
+                            class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg transition duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                             </svg>
@@ -244,8 +245,8 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
+                            </tr>
+                        </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             <?php foreach ($transactions as $transaction): ?>
                                 <tr>
@@ -270,17 +271,17 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                                         <?php echo number_format($transaction['quantity']); ?>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button onclick="viewTransaction(<?php echo htmlspecialchars(json_encode($transaction)); ?>)" 
-                                                class="text-blue-600 hover:text-blue-900 mr-3">View Details</button>
+                                        <button onclick="viewTransaction(<?php echo htmlspecialchars(json_encode($transaction)); ?>)"
+                                            class="text-blue-600 hover:text-blue-900 mr-3">View Details</button>
                                         <?php if ($transaction['pdf_filename']): ?>
-                                            <a href="/autonomic/export_pdf.php?type=<?php echo $transaction['type']; ?>&id=<?php echo $transaction['id']; ?>" 
-                                               class="text-green-600 hover:text-green-900">Download PDF</a>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+                                                <a href="/autonomic/export_pdf.php?type=<?php echo $transaction['type']; ?>&id=<?php echo $transaction['id']; ?>" target="_blank"
+                                                    class="text-green-600 hover:text-green-900">Download PDF</a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
             <?php endif; ?>
         </div>
@@ -294,10 +295,10 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                 <div id="transactionDetails" class="space-y-4">
                     <!-- Transaction details will be populated here -->
                 </div>
-                
+
                 <div class="flex justify-end mt-6">
-                    <button onclick="closeTransactionModal()" 
-                            class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-200">
+                    <button onclick="closeTransactionModal()"
+                        class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition duration-200">
                         Close
                     </button>
                 </div>
@@ -347,5 +348,5 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
             if (e.target === this) closeTransactionModal();
         });
     </script>
-    <?php
+<?php
 });

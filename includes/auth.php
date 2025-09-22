@@ -26,7 +26,4 @@ function authenticate(string $email, string $password): ?array {
     }
     return null;
 }
-
 ?>
-
-

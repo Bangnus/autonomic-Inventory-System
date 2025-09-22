@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 require_once __DIR__ . '/../db.php';
 require_admin();
@@ -13,15 +14,15 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'create') {
         $code = trim((string)($_POST['code'] ?? ''));
         $name = trim((string)($_POST['name'] ?? ''));
         $serial = trim((string)($_POST['serial'] ?? ''));
         $model = trim((string)($_POST['model'] ?? ''));
         $stock_quantity = (int)($_POST['stock_quantity'] ?? 0);
-        
-        if ($code && $name && $stock_quantity >= 0) {
+
+        if ($code  && $stock_quantity >= 0) {
             try {
                 $stmt = $pdo->prepare('INSERT INTO products (code, name, serial, model, stock_quantity) VALUES (?, ?, ?, ?, ?)');
                 $stmt->execute([$code, $name, $serial, $model, $stock_quantity]);
@@ -39,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $serial = trim((string)($_POST['serial'] ?? ''));
         $model = trim((string)($_POST['model'] ?? ''));
         $stock_quantity = (int)($_POST['stock_quantity'] ?? 0);
-        
+
         if ($product_id && $code && $name && $stock_quantity >= 0) {
             try {
                 $stmt = $pdo->prepare('UPDATE products SET code = ?, name = ?, serial = ?, model = ?, stock_quantity = ? WHERE id = ?');
@@ -53,14 +54,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'delete') {
         $product_id = (int)($_POST['product_id'] ?? 0);
-        
+
         if ($product_id) {
             try {
                 // Check if product has transactions
                 $stmt = $pdo->prepare('SELECT COUNT(*) as count FROM transactions WHERE product_id = ?');
                 $stmt->execute([$product_id]);
                 $transaction_count = $stmt->fetch()['count'];
-                
+
                 if ($transaction_count > 0) {
                     $error = 'Cannot delete product with existing transactions.';
                 } else {
@@ -96,7 +97,7 @@ $products = $stmt->fetchAll();
 require_once __DIR__ . '/../layouts/sidebar.php';
 $pageTitle = 'Manage Products';
 render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $search, $products) {
-    ?>
+?>
     <div class="max-w-7xl mx-auto">
         <div class="mb-8">
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Manage Products</h2>
@@ -129,17 +130,17 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
             <form method="get" action="" class="flex gap-4">
                 <div class="flex-1">
-                    <input type="text" name="search" value="<?php echo e($search); ?>" 
-                           placeholder="Search by code, name, serial, or model..." 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <input type="text" name="search" value="<?php echo e($search); ?>"
+                        placeholder="Search by code, name, serial, or model..."
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                 </div>
-                <button type="submit" 
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-200">
+                <button type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition duration-200">
                     Search
                 </button>
                 <?php if ($search): ?>
-                    <a href="/autonomic/admin/manage_products.php" 
-                       class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition duration-200">
+                    <a href="/autonomic/admin/manage_products.php"
+                        class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition duration-200">
                         Clear
                     </a>
                 <?php endif; ?>
@@ -152,45 +153,45 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
             <form method="post" action="" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>" />
                 <input type="hidden" name="action" value="create" />
-                
+
                 <div>
                     <label for="code" class="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
-                    <input type="text" id="code" name="code" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                           placeholder="Enter product code" />
+                    <input type="text" id="code" name="code" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter product code" />
                 </div>
-                
+
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
-                    <input type="text" id="name" name="name" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                           placeholder="Enter product name" />
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Product Name </label>
+                    <input type="text" id="name" name="name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter product name" />
                 </div>
-                
+
                 <div>
                     <label for="serial" class="block text-sm font-medium text-gray-700 mb-2">Serial Number</label>
-                    <input type="text" id="serial" name="serial" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                           placeholder="Enter serial number" />
+                    <input type="text" id="serial" name="serial"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter serial number" />
                 </div>
-                
+
                 <div>
                     <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                    <input type="text" id="model" name="model" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                           placeholder="Enter model" />
+                    <input type="text" id="model" name="model"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter model" />
                 </div>
-                
+
                 <div>
                     <label for="stock_quantity" class="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
-                    <input type="number" id="stock_quantity" name="stock_quantity" required min="0" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                           placeholder="0" />
+                    <input type="number" id="stock_quantity" name="stock_quantity" required min="0"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="0" />
                 </div>
-                
+
                 <div class="md:col-span-2 lg:col-span-5">
-                    <button type="submit" 
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
                         Create Product
                     </button>
                 </div>
@@ -202,7 +203,7 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
             <div class="px-6 py-4 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-900">All Products (<?php echo count($products); ?>)</h3>
             </div>
-            
+
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -223,7 +224,7 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
                                     <?php echo e($product['code']); ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    <?php echo e($product['name']); ?>
+                                    <?php echo e($product['name'] ?: '-'); ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     <?php echo e($product['serial'] ?: '-'); ?>
@@ -240,10 +241,10 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
                                     <?php echo date('M j, Y', strtotime($product['created_at'])); ?>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <button onclick="openEditModal(<?php echo htmlspecialchars(json_encode($product)); ?>)" 
-                                            class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                                    <button onclick="confirmDelete(<?php echo $product['id']; ?>, '<?php echo e($product['name']); ?>')" 
-                                            class="text-red-600 hover:text-red-900">Delete</button>
+                                    <button onclick="openEditModal(<?php echo htmlspecialchars(json_encode($product)); ?>)"
+                                        class="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                                    <button onclick="confirmDelete(<?php echo $product['id']; ?>, '<?php echo e($product['name']); ?>')"
+                                        class="text-red-600 hover:text-red-900">Delete</button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -262,46 +263,46 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
                     <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>" />
                     <input type="hidden" name="action" value="update" />
                     <input type="hidden" name="product_id" id="edit_product_id" />
-                    
+
                     <div class="space-y-4">
                         <div>
                             <label for="edit_code" class="block text-sm font-medium text-gray-700 mb-2">Product Code *</label>
-                            <input type="text" id="edit_code" name="code" required 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            <input type="text" id="edit_code" name="code" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
-                        
+
                         <div>
-                            <label for="edit_name" class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
-                            <input type="text" id="edit_name" name="name" required 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            <label for="edit_name" class="block text-sm font-medium text-gray-700 mb-2">Product Name </label>
+                            <input type="text" id="edit_name" name="name"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
-                        
+
                         <div>
                             <label for="edit_serial" class="block text-sm font-medium text-gray-700 mb-2">Serial Number</label>
-                            <input type="text" id="edit_serial" name="serial" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            <input type="text" id="edit_serial" name="serial"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
-                        
+
                         <div>
                             <label for="edit_model" class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-                            <input type="text" id="edit_model" name="model" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            <input type="text" id="edit_model" name="model"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
-                        
+
                         <div>
                             <label for="edit_stock_quantity" class="block text-sm font-medium text-gray-700 mb-2">Stock Quantity *</label>
-                            <input type="number" id="edit_stock_quantity" name="stock_quantity" required min="0" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                            <input type="number" id="edit_stock_quantity" name="stock_quantity" required min="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
                         </div>
                     </div>
-                    
+
                     <div class="flex justify-end space-x-3 mt-6">
-                        <button type="button" onclick="closeEditModal()" 
-                                class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-200">
+                        <button type="button" onclick="closeEditModal()"
+                            class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-200">
                             Cancel
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200">
+                        <button type="submit"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200">
                             Update Product
                         </button>
                     </div>
@@ -316,19 +317,19 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
             <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
                 <p class="text-gray-600 mb-6">Are you sure you want to delete product <span id="deleteProductName" class="font-semibold"></span>? This action cannot be undone.</p>
-                
+
                 <form id="deleteForm" method="post" action="">
                     <input type="hidden" name="csrf_token" value="<?php echo e(csrf_token()); ?>" />
                     <input type="hidden" name="action" value="delete" />
                     <input type="hidden" name="product_id" id="delete_product_id" />
-                    
+
                     <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeDeleteModal()" 
-                                class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-200">
+                        <button type="button" onclick="closeDeleteModal()"
+                            class="px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-200">
                             Cancel
                         </button>
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200">
+                        <button type="submit"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200">
                             Delete Product
                         </button>
                     </div>
@@ -371,5 +372,5 @@ render_with_sidebar($pageTitle, 'products', function () use ($error, $success, $
             if (e.target === this) closeDeleteModal();
         });
     </script>
-    <?php
+<?php
 });
