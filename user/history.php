@@ -274,8 +274,8 @@ render_with_sidebar($pageTitle, 'history', function () use ($summary, $date_from
                                         <button onclick="viewTransaction(<?php echo htmlspecialchars(json_encode($transaction)); ?>)"
                                             class="text-blue-600 hover:text-blue-900 mr-3">View Details</button>
                                         <?php if ($transaction['pdf_filename']): ?>
-                                                <a href="/autonomic/export_pdf.php?type=<?php echo $transaction['type']; ?>&id=<?php echo $transaction['id']; ?>" target="_blank"
-                                                    class="text-green-600 hover:text-green-900">Download PDF</a>
+                                            <a href="/autonomic/export_pdf.php?type=<?php echo $transaction['type']; ?>&id=<?php echo $transaction['id']; ?>&date=<?php echo $transaction['date']; ?>" target="_blank"
+                                                class="text-green-600 hover:text-green-900">Download PDF</a>
                                         <?php endif; ?>
                                     </td>
                                 </tr>

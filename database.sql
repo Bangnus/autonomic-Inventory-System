@@ -67,5 +67,5 @@ CREATE TABLE IF NOT EXISTS requests (
 
 -- Seed an initial admin (password: Admin@123) - change after first login
 INSERT INTO users (name, email, password_hash, role)
-VALUES ('Administrator', 'admin@example.com', '$2y$10$kWcF5.0oCk1R8cY6S4bq9OZr2o6y2qkC9kE5y9V8gH6Ck1bJfxm7W', 'admin')
+VALUES ('Administrator', 'admin@example.com', 'admin12345', 'admin')
 ON DUPLICATE KEY UPDATE email = email;

@@ -1,0 +1,74 @@
+<!-- templates/transaction_template.html -->
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Transactions</title>
+    <style>
+        body {
+            font-family: "thsarabun";
+        }
+
+        img.logo {
+            width: 100px;
+            height: auto;
+        }
+
+        img.signature {
+            height: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <table width="100%">
+        <tr>
+            <td width="10%" style="">
+                <img src="{{ logo_path }}" style="width:150px;height:auto;" />
+            </td>
+            <td width="15%"></td>
+            <td>
+                <h3 style="font-weight: bold;">AUTONOMIC COMPANY LIMITED</h3>
+                <p style="font-size: 16px;">98/103 PHUKET@TOWN, SURIN RD, MUANG, PHUKET 83000</p>
+                <p style="font-size: 16px;">TEL:+66 93 741 0111 FAX: +66 76 510 450 EMAIL: info@theautonomic.net</p>
+            </td>
+        </tr>
+    </table>
+
+    <h2 style="text-align: center;">ใบเบิกอุปกรณ์</h2>
+
+    <table>
+        <tr>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Signature</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in transactions %}
+            <tr>
+                <td>{{ t.id }}</td>
+                <td>{{ t.user_name }}</td>
+                <td>{{ t.product_name }}</td>
+                <td>{{ t.quantity }}</td>
+                <td><img src="{{ t.signature_base64 }}" class="signature" /></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>

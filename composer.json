@@ -2,6 +2,8 @@
     "name": "autonomic/pdf-system",
     "description": "PDF Generation System",
     "require": {
-        "spipu/html2pdf": "^5.2"
+        "spipu/html2pdf": "^5.2",
+        "mpdf/mpdf": "^8.2",
+        "twig/twig": "^3.19"
     }
 }
