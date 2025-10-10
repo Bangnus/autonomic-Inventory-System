@@ -36,38 +36,81 @@
         </tr>
     </table>
 
-    <h2 style="text-align: center;">ใบเบิกอุปกรณ์</h2>
+    <h2 style="text-align: center;">{{ document_type }}</h2>
 
-    <table>
+    <table style="border-collapse: collapse; width: 100%;">
         <tr>
-            <td></td>
-            <td></td>
+            <td width="75.2%"></td>
+            <td>
+                <p>เลขที่เอกสาร: <span style="font-weight: bold;">...................................</span></p>
+            </td>
+        </tr>
+    </table>
+    <table style="border-collapse: collapse; width: 100%;">
+        <tr>
+            <td width="80%">
+                <p>JOB: <span
+                        style="font-weight: bold;">.......................................................................................................................................................................</span>
+                </p>
+            </td>
+            <td>
+                <p>วันที่: <span style="font-weight: bold;">{{date}}</span></p>
+            </td>
         </tr>
     </table>
 
-
-
-    <table>
+    <table style="border-collapse: collapse; width: 100%; margin-top: 5px;">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Signature</th>
+                <th width="7%" style="border: 1px solid black; padding-top: 10px; padding-bottom: 10px;">ลำดับ</th>
+                <th width="35%" style="border: 1px solid black;">รายการ</th>
+                <th width="10%" style="border: 1px solid black;">{% if is_request %}จำนวนที่ขอเบิก{% else %}จำนวนที่คืน{% endif %}</th>
+                <th width="8%" style="border: 1px solid black;">หน่วย</th>
+                <th width="10%" style="border: 1px solid black;">{% if is_request %}จำนวนที่ใช้{% else %}จำนวนที่รับคืน{% endif %}</th>
+                <th width="10%" style="border: 1px solid black;">คงเหลือ</th>
+                <th width="20%" style="border: 1px solid black;">หมายเหตุ</th>
             </tr>
         </thead>
         <tbody>
             {% for t in transactions %}
             <tr>
-                <td>{{ t.id }}</td>
-                <td>{{ t.user_name }}</td>
-                <td>{{ t.product_name }}</td>
-                <td>{{ t.quantity }}</td>
-                <td><img src="{{ t.signature_base64 }}" class="signature" /></td>
+                <td style="border: 1px solid black; text-align: center;">{{ loop.index }}</td>
+                <td style="border: 1px solid black; padding-left: 10px;">
+                    {{ (t.product_name ~ ' ' ~ t.product_model)|trim|default(t.product_code) }}
+                </td>
+                <td style="border: 1px solid black; text-align: center;">{{ t.quantity }}</td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black;"></td>
+                <td style="border: 1px solid black; text-align: center;">{{ t.product_stock }}</td>
+                <td style="border: 1px solid black;">
+                </td>
             </tr>
             {% endfor %}
         </tbody>
+    </table>
+
+    <table style="border-collapse: collapse; width: 100%; margin-top: 5%;">
+        <tr>
+            <td width="5%"></td>
+            <td width="20%" style="text-align: center;">
+                <div>
+                    {% if transaction.signature_base64 %}
+                        <img src="{{ transaction.signature_base64 }}" class="signature" />
+                    {% endif %}
+                    <p>{% if is_request %}ผู้เบิก{% else %}ผู้คืน{% endif %}</p>
+                    <p style="margin-top: 5px;">({{ transaction.user_name }})</p>
+                </div>
+            </td>
+            <td style="text-align: center;">
+                <div>
+                    {% if transaction.admin_signature %}
+                        <img src="{{ transaction.admin_signature }}" class="signature" />
+                    {% endif %}
+                    <p>{% if is_request %}ผู้ตรวจรับของ{% else %}ผู้รับคืนของ{% endif %}</p>
+                    <p style="margin-top: 5px;">({{ transaction.admin_name }})</p>
+                </div>
+            </td>
+        </tr>
     </table>
 </body>
 
