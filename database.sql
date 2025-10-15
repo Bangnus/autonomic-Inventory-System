@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   quantity INT NOT NULL,
   signature_base64 MEDIUMTEXT NOT NULL,
   pdf_filename VARCHAR(255) NULL,
+  date date DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_transactions_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT,
@@ -66,7 +67,3 @@ CREATE TABLE IF NOT EXISTS requests (
 --   INDEX idx_returns_filters (user_id, product_id, created_at)
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed an initial admin (password: Admin@123) - change after first login
-INSERT INTO users (name, email, password_hash, role)
-VALUES ('Administrator', 'admin@example.com', 'admin12345', 'admin')
-ON DUPLICATE KEY UPDATE email = email;
